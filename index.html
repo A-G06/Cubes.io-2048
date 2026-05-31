@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cubes.io 2048 - Arena</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-wrapper">
+        
+        <div id="canvas-container">
+            <button id="guide-toggle-btn" onclick="toggleGuide()">GUIDE</button>
+
+            <div id="hud">
+                <div>
+                    <div class="hud-label">Value</div>
+                    <div id="player-score" class="hud-val">2</div>
+                </div>
+                <div class="stamina-container">
+                    <div class="hud-label" style="text-align: center;">Sprint</div>
+                    <svg class="stamina-ring" width="32" height="32">
+                        <circle class="bg" cx="16" cy="16" r="14"></circle>
+                        <circle class="progress" id="stamina-bar" cx="16" cy="16" r="14"></circle>
+                    </svg>
+                    <div class="stamina-text" id="stamina-text">100%</div>
+                </div>
+            </div>
+
+            <div id="leaderboard">
+                <h3>Leaderboard</h3>
+                <div id="lb-content"></div>
+            </div>
+
+            <canvas id="arenaCanvas"></canvas>
+
+            <div id="menu-screen" class="screen">
+                <div class="panel">
+                    <h1>CUBES.IO 2048</h1>
+                    <p class="subtitle">Eat, Merge, Destroy the Lesser Cubes</p>
+                    
+                    <input type="text" id="nickname" value="Player" maxlength="12">
+                    
+                    <div class="diff-label">Select Arena Level</div>
+                    <div class="diff-container" id="diff-container">
+                        <button class="diff-btn active" data-diff="easy">Easy</button>
+                        <button class="diff-btn" data-diff="medium">Med</button>
+                        <button class="diff-btn" data-diff="hard">Hard</button>
+                        <button class="diff-btn" data-diff="impossible">Imp</button>
+                    </div>
+
+                    <div class="rules" id="rules-box">
+                        • Use **Arrow Keys** to steer.<br>
+                        • Hold **Q** to sprint. Watch your stamina!
+                    </div>
+                    <button class="play-btn" onclick="startGame()">Enter Arena</button>
+                </div>
+            </div>
+
+            <div id="game-over-screen" class="screen hidden">
+                <div class="panel" style="border-color: #ef4444;">
+                    <h1 style="background: linear-gradient(45deg, #f87171, #ef4444); -webkit-background-clip: text;">WASTED</h1>
+                    <p class="subtitle" id="death-reason" style="color: #fca5a5; margin-top: 10px;"></p>
+                    <button class="play-btn" onclick="showMenu()" style="background: linear-gradient(135deg, #64748b, #475569); box-shadow: none;">Back to Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="dev-guide-panel" class="closed">
+            <div class="panel-header">
+                <h2>Cubes.io Guide Layout</h2>
+                <button class="close-panel-btn" onclick="toggleGuide()">×</button>
+            </div>
+            <div class="panel-content">
+                <div class="guide-section">
+                    <h4>[1] Controls</h4>
+                    <p>• Move: Arrow Keys</p>
+                    <p>• Boost: Q Key (1.8x Speed)</p>
+                    <p>• Stamina: Recharges when stationary or moving normally. Hard lockouts hit if tracking hits 0%.</p>
+                </div>
+                <div class="guide-section">
+                    <h4>[2] Difficulty Matrix</h4>
+                    <p><span class="highlight-text">Easy:</span> Bulk population are lesser value blocks. Hunt immediately.</p>
+                    <p><span class="highlight-text">Medium:</span> 50% split. Check board ranks prior to locking battles.</p>
+                    <p><span class="highlight-text">Hard:</span> 75% higher tiers. Edge map vacuuming suggested.</p>
+                    <p><span class="highlight-text">Impossible:</span> 100% higher values. Avoid bots entirely. Build score strictly on gray food cells.</p>
+                </div>
+                <div class="guide-section">
+                    <h4>[3] Pro Tactics</h4>
+                    <p>• Feather Sprint: Don't anchor Q down. Use 1s pulses.</p>
+                    <p>• Edge Traps: Force smaller AI trackers into the red boundary lines to secure safe closures.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
