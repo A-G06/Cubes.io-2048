@@ -102,30 +102,6 @@ canvas {
 .lb-entry { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px; color: #ccc;}
 .lb-entry.highlight { color: #00f2fe; font-weight: bold; }
 
-/* --- INTERACTIVE GUIDE BUTTON --- */
-#guide-toggle-btn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 5;
-    background: #1e1e2f;
-    border: 1px solid #3a3a55;
-    color: #00f2fe;
-    padding: 8px 18px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.85rem;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    transition: all 0.2s ease;
-}
-#guide-toggle-btn:hover {
-    background: #25253b;
-    border-color: #00f2fe;
-    box-shadow: 0 4px 20px rgba(0, 242, 254, 0.2);
-}
-
 /* --- DEV STYLED SIDE GUIDE PANEL --- */
 #dev-guide-panel {
     width: 320px;
@@ -294,18 +270,97 @@ input[type="text"] {
     border-left: 3px solid #6366f1;
 }
 
-.play-btn {
-    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-    border: none;
-    color: white;
-    padding: 15px 40px;
-    font-size: 1.1rem;
+/* --- BUTTON CONSOLE GROUPING --- */
+.action-group {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+.menu-btn {
+    padding: 15px 25px;
+    font-size: 1rem;
     font-weight: bold;
     border-radius: 30px;
     cursor: pointer;
-    width: 100%;
     text-transform: uppercase;
     letter-spacing: 1px;
     transition: all 0.3s ease;
+    border: none;
+}
+.guide-toggle-btn {
+    background: #1e1e2f;
+    border: 1px solid #3a3a55;
+    color: #00f2fe;
+    flex: 1;
+}
+.guide-toggle-btn:hover {
+    background: #25253b;
+    border-color: #00f2fe;
+}
+.play-btn {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: white;
+    flex: 2;
 }
 .play-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 242, 254, 0.5); }
+
+/* --- MOBILE ON-SCREEN SIMULATION HARDWARE CONTROLS --- */
+#mobile-touch-joystick-zone {
+    position: absolute;
+    bottom: 30px;
+    right: 40px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    z-index: 5;
+    display: none; /* Injected and revealed contextually via JS engine sizing checks */
+    touch-action: none;
+    backdrop-filter: blur(4px);
+}
+#mobile-joystick-handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #00f2fe 0%, #6366f1 100%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+    pointer-events: none;
+}
+#mobile-sprint-pad-btn {
+    position: absolute;
+    bottom: 45px;
+    left: 40px;
+    width: 75px;
+    height: 75px;
+    background: rgba(30, 30, 47, 0.75);
+    border: 2px solid #3a3a55;
+    color: #00f2fe;
+    font-weight: 800;
+    font-size: 0.8rem;
+    border-radius: 50%;
+    z-index: 5;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+}
+#mobile-sprint-pad-btn.active {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    color: #fff;
+    border-color: #fff;
+    transform: scale(0.95);
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.6);
+}
+
+@media(max-width: 768px) {
+    #hud { bottom: auto; top: 20px; left: 20px; padding: 8px 16px; gap: 15px; }
+    #leaderboard { display: none; } /* Clear screen viewport elements on smaller mobile instances */
+    .panel { padding: 25px 20px; }
+    h1 { font-size: 2.2rem; }
+}

@@ -11,7 +11,11 @@
     <div id="game-wrapper">
         
         <div id="canvas-container">
-            <button id="guide-toggle-btn" onclick="toggleGuide()">GUIDE</button>
+            <!-- Mobile Virtual Controllers Systems -->
+            <div id="mobile-touch-joystick-zone">
+                <div id="mobile-joystick-handle"></div>
+            </div>
+            <div id="mobile-sprint-pad-btn">SPRINT</div>
 
             <div id="hud">
                 <div>
@@ -51,10 +55,14 @@
                     </div>
 
                     <div class="rules" id="rules-box">
-                        • Use **Arrow Keys** to steer.<br>
-                        • Hold **Q** to sprint. Watch your stamina!
+                        • Use **Arrow Keys / WASD** or **On-screen Joystick** to steer.<br>
+                        • Hold **Q / Shift** or **Sprint Button** to boost velocity.
                     </div>
-                    <button class="play-btn" onclick="startGame()">Enter Arena</button>
+                    
+                    <div class="action-group">
+                        <button class="menu-btn guide-toggle-btn" onclick="toggleGuide()">Guide</button>
+                        <button class="menu-btn play-btn" onclick="startGame()">Enter Arena</button>
+                    </div>
                 </div>
             </div>
 
@@ -62,7 +70,7 @@
                 <div class="panel" style="border-color: #ef4444;">
                     <h1 style="background: linear-gradient(45deg, #f87171, #ef4444); -webkit-background-clip: text;">WASTED</h1>
                     <p class="subtitle" id="death-reason" style="color: #fca5a5; margin-top: 10px;"></p>
-                    <button class="play-btn" onclick="showMenu()" style="background: linear-gradient(135deg, #64748b, #475569); box-shadow: none;">Back to Menu</button>
+                    <button class="play-btn menu-btn" onclick="showMenu()" style="background: linear-gradient(135deg, #64748b, #475569); box-shadow: none;">Back to Menu</button>
                 </div>
             </div>
         </div>
@@ -75,9 +83,9 @@
             <div class="panel-content">
                 <div class="guide-section">
                     <h4>[1] Controls</h4>
-                    <p>• Move: Arrow Keys</p>
-                    <p>• Boost: Q Key (1.8x Speed)</p>
-                    <p>• Stamina: Recharges when stationary or moving normally. Hard lockouts hit if tracking hits 0%.</p>
+                    <p>• PC Move: Arrow Keys or W, A, S, D Keys</p>
+                    <p>• Mobile Move: Drag the Touch Joystick</p>
+                    <p>• Boost Vector: Q / Shift or Mobile Sprint Touch interface element</p>
                 </div>
                 <div class="guide-section">
                     <h4>[2] Difficulty Matrix</h4>
@@ -85,11 +93,6 @@
                     <p><span class="highlight-text">Medium:</span> 50% split. Check board ranks prior to locking battles.</p>
                     <p><span class="highlight-text">Hard:</span> 75% higher tiers. Edge map vacuuming suggested.</p>
                     <p><span class="highlight-text">Impossible:</span> 100% higher values. Avoid bots entirely. Build score strictly on gray food cells.</p>
-                </div>
-                <div class="guide-section">
-                    <h4>[3] Pro Tactics</h4>
-                    <p>• Feather Sprint: Don't anchor Q down. Use 1s pulses.</p>
-                    <p>• Edge Traps: Force smaller AI trackers into the red boundary lines to secure safe closures.</p>
                 </div>
             </div>
         </div>

@@ -14,6 +14,11 @@ const diffButtons = document.querySelectorAll('.diff-btn');
 const rulesBox = document.getElementById('rules-box');
 const devGuidePanel = document.getElementById('dev-guide-panel');
 
+// Mobile Controls Hooks
+const touchJoystickZone = document.getElementById('mobile-touch-joystick-zone');
+const joystickHandle = document.getElementById('mobile-joystick-handle');
+const mobileSprintBtn = document.getElementById('mobile-sprint-pad-btn');
+
 // Constants
 const WORLD_WIDTH = 2500;
 const WORLD_HEIGHT = 2500;
@@ -31,7 +36,18 @@ const STAMINA_DRAIN = 0.6;
 const STAMINA_RECHARGE = 0.35;
 let isSprintSpunOut = false; 
 
-const keys = { arrowup: false, arrowdown: false, arrowleft: false, arrowright: false, q: false };
+// Combined keyboard inputs structure configurations
+const keys = { 
+    arrowup: false, arrowdown: false, arrowleft: false, arrowright: false, 
+    w: false, s: false, a: false, d: false, 
+    q: false, shift: false 
+};
+
+// Global Mobile Vector Allocators
+let joystickVector = { x: 0, y: 0 };
+let isTouchActiveDevice = false;
+let mobileSprintActive = false;
+
 const colors = {
     2: '#3b82f6', 4: '#6366f1', 8: '#8b5cf6', 16: '#ec4899',
     32: '#f43f5e', 64: '#e11d48', 128: '#f59e0b', 256: '#d97706',
@@ -82,15 +98,32 @@ class CubeEntity {
             this.x += Math.cos(this.angle) * this.speed; this.y += Math.sin(this.angle) * this.speed;
         } else {
             let dx = 0; let dy = 0;
-            if (keys.arrowup) dy -= 1; if (keys.arrowdown) dy += 1;
-            if (keys.arrowleft) dx -= 1; if (keys.arrowright) dx += 1;
+            
+            // Core PC Movement Mapping Fallbacks
+            if (keys.arrowup || keys.w) dy -= 1; 
+            if (keys.arrowdown || keys.s) dy += 1;
+            if (keys.arrowleft || keys.a) dx -= 1; 
+            if (keys.arrowright || keys.d) dx += 1;
 
-            if (dx !== 0 || dy !== 0) {
+            let isMoving = dx !== 0 || dy !== 0;
+            
+            // Inject Tracking Overwrite Matrix if Virtual Touch Joystick registers values
+            if (isTouchActiveDevice && (joystickVector.x !== 0 || joystickVector.y !== 0)) {
+                dx = joystickVector.x;
+                dy = joystickVector.y;
+                isMoving = true;
+            }
+
+            if (isMoving) {
                 this.angle = Math.atan2(dy, dx);
                 let currentMoveSpeed = this.speed;
-                if (keys.q && stamina > 0 && !isSprintSpunOut) {
+                
+                // Track Combined PC / Mobile Sprint Modifiers Loops
+                let sprintTriggered = keys.q || keys.shift || mobileSprintActive;
+
+                if (sprintTriggered && stamina > 0 && !isSprintSpunOut) {
                     currentMoveSpeed *= 1.8; stamina -= STAMINA_DRAIN;
-                    if(stamina <= 0) { stamina = 0; isSprintSpunOut = true; }
+                    if(stamina <= 0) { stamina = 0; isSprintSpunOut = true; mobileSprintActive = false; if(mobileSprintBtn) mobileSprintBtn.classList.remove('active'); }
                 } else {
                     if(stamina < 100) {
                         stamina += STAMINA_RECHARGE;
@@ -98,7 +131,16 @@ class CubeEntity {
                         if(stamina > 100) stamina = 100;
                     }
                 }
-                this.x += Math.cos(this.angle) * currentMoveSpeed; this.y += Math.sin(this.angle) * currentMoveSpeed;
+                
+                // Scale calculations safely normalized to vector speeds
+                if (isTouchActiveDevice && (joystickVector.x !== 0 || joystickVector.y !== 0)) {
+                    let magnitude = Math.min(1, Math.hypot(dx, dy));
+                    this.x += Math.cos(this.angle) * currentMoveSpeed * magnitude;
+                    this.y += Math.sin(this.angle) * currentMoveSpeed * magnitude;
+                } else {
+                    this.x += Math.cos(this.angle) * currentMoveSpeed; 
+                    this.y += Math.sin(this.angle) * currentMoveSpeed;
+                }
             } else {
                 if(stamina < 100) {
                     stamina += STAMINA_RECHARGE;
@@ -144,11 +186,82 @@ function updateStaminaMeter() {
 function resizeCanvas() {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
+    
+    // Auto-detect environments to show mobile touch pads on small or touch interfaces
+    if (('ontouchstart' in window) || navigator.maxTouchPoints > 0 || window.innerWidth <= 768) {
+        isTouchActiveDevice = true;
+        touchJoystickZone.style.display = 'block';
+        mobileSprintBtn.style.display = 'flex';
+    } else {
+        isTouchActiveDevice = false;
+        touchJoystickZone.style.display = 'none';
+        mobileSprintBtn.style.display = 'none';
+    }
 }
 window.addEventListener('resize', resizeCanvas);
 
+// --- KEYBOARD HARDWARE LISTENER ASSIGNMENTS ---
 window.addEventListener('keydown', (e) => { const key = e.key.toLowerCase(); if (key in keys) keys[key] = true; });
 window.addEventListener('keyup', (e) => { const key = e.key.toLowerCase(); if (key in keys) keys[key] = false; });
+
+// --- VIRTUAL SMARTPHONE JOYSTICK ENGINE ---
+let joystickId = null;
+let startJoystickPos = { x: 0, y: 0 };
+
+touchJoystickZone.addEventListener('touchstart', (e) => {
+    if (joystickId !== null) return;
+    const touch = e.changedTouches[0];
+    joystickId = touch.identifier;
+    const rect = touchJoystickZone.getBoundingClientRect();
+    startJoystickPos = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+});
+
+window.addEventListener('touchmove', (e) => {
+    if (joystickId === null) return;
+    for (let touch of e.touches) {
+        if (touch.identifier === joystickId) {
+            let dx = touch.clientX - startJoystickPos.x;
+            let dy = touch.clientY - startJoystickPos.y;
+            let distance = Math.hypot(dx, dy);
+            const maxRadius = 50; // Max constraint range limit of outer bounding node
+
+            if (distance > maxRadius) {
+                dx = (dx / distance) * maxRadius;
+                dy = (dy / distance) * maxRadius;
+                distance = maxRadius;
+            }
+
+            joystickHandle.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            joystickVector = { x: dx / maxRadius, y: dy / maxRadius };
+        }
+    }
+});
+
+const endJoystickHandler = (e) => {
+    if (joystickId === null) return;
+    for (let touch of e.changedTouches) {
+        if (touch.identifier === joystickId) {
+            joystickId = null;
+            joystickHandle.style.transform = 'translate(-50%, -50%)';
+            joystickVector = { x: 0, y: 0 };
+        }
+    }
+};
+window.addEventListener('touchend', endJoystickHandler);
+window.addEventListener('touchcancel', endJoystickHandler);
+
+// Mobile Sprint Touch Toggle Pad Systems
+mobileSprintBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if(isSprintSpunOut) return;
+    mobileSprintActive = true;
+    mobileSprintBtn.classList.add('active');
+});
+mobileSprintBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    mobileSprintActive = false;
+    mobileSprintBtn.classList.remove('active');
+});
 
 function spawnFood(count = 1) {
     for(let i=0; i<count; i++) entities.push(new CubeEntity(Math.random() * WORLD_WIDTH, Math.random() * WORLD_HEIGHT, Math.random() > 0.85 ? 4 : 2, "", false, true));
@@ -171,7 +284,8 @@ function spawnBot(count = 1) {
 }
 
 function setupArena() {
-    entities = []; stamina = 100; isSprintSpunOut = false;
+    entities = []; stamina = 100; isSprintSpunOut = false; mobileSprintActive = false;
+    mobileSprintBtn.classList.remove('active');
     let nick = nickInput.value.trim() || "Player";
     player = new CubeEntity(WORLD_WIDTH/2, WORLD_HEIGHT/2, 2, nick, false, false);
     for (let k in keys) keys[k] = false;
@@ -258,4 +372,5 @@ function startGame() {
 function gameOver(killerName) { isRunning = false; deathReasonEl.innerText = `Eaten by ${killerName} on ${selectedDifficulty.toUpperCase()}!`; gameOverScreen.classList.remove('hidden'); }
 function showMenu() { gameOverScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); }
 
+// Init runtime constraints setup configurations
 resizeCanvas();
