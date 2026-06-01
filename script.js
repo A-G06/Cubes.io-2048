@@ -1,3 +1,14 @@
+let totalCoins = 0;
+let ownedRevives = 0;
+const REVIVE_COST = 500;
+
+// DOM Elements
+const totalCoinsEl = document.getElementById('total-coins');
+const shopCoinsEl = document.getElementById('shop-coins-val');
+const buyReviveBtn = document.getElementById('buy-revive-btn');
+const useReviveBtn = document.getElementById('use-revive-btn');
+const reviveCountDisplay = document.getElementById('revive-count-display'); // Restored element reference
+
 const canvas = document.getElementById('arenaCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -36,14 +47,12 @@ const STAMINA_DRAIN = 0.6;
 const STAMINA_RECHARGE = 0.35;
 let isSprintSpunOut = false; 
 
-// Combined keyboard inputs structure configurations
 const keys = { 
     arrowup: false, arrowdown: false, arrowleft: false, arrowright: false, 
     w: false, s: false, a: false, d: false, 
     q: false, shift: false 
 };
 
-// Global Mobile Vector Allocators
 let joystickVector = { x: 0, y: 0 };
 let isTouchActiveDevice = false;
 let mobileSprintActive = false;
@@ -62,13 +71,11 @@ const difficultyRules = {
     impossible: "• **Impossible Mode**: Cosmic Threat. Eat gray food cells exclusively to start."
 };
 
-// Toggle Side Guide Panel Layout
 function toggleGuide() {
     devGuidePanel.classList.toggle('closed');
     setTimeout(resizeCanvas, 310);
 }
 
-// Menu Difficulty Switcher Layout
 diffButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         diffButtons.forEach(b => b.classList.remove('active'));
@@ -99,7 +106,6 @@ class CubeEntity {
         } else {
             let dx = 0; let dy = 0;
             
-            // Core PC Movement Mapping Fallbacks
             if (keys.arrowup || keys.w) dy -= 1; 
             if (keys.arrowdown || keys.s) dy += 1;
             if (keys.arrowleft || keys.a) dx -= 1; 
@@ -107,7 +113,6 @@ class CubeEntity {
 
             let isMoving = dx !== 0 || dy !== 0;
             
-            // Inject Tracking Overwrite Matrix if Virtual Touch Joystick registers values
             if (isTouchActiveDevice && (joystickVector.x !== 0 || joystickVector.y !== 0)) {
                 dx = joystickVector.x;
                 dy = joystickVector.y;
@@ -118,7 +123,6 @@ class CubeEntity {
                 this.angle = Math.atan2(dy, dx);
                 let currentMoveSpeed = this.speed;
                 
-                // Track Combined PC / Mobile Sprint Modifiers Loops
                 let sprintTriggered = keys.q || keys.shift || mobileSprintActive;
 
                 if (sprintTriggered && stamina > 0 && !isSprintSpunOut) {
@@ -132,7 +136,6 @@ class CubeEntity {
                     }
                 }
                 
-                // Scale calculations safely normalized to vector speeds
                 if (isTouchActiveDevice && (joystickVector.x !== 0 || joystickVector.y !== 0)) {
                     let magnitude = Math.min(1, Math.hypot(dx, dy));
                     this.x += Math.cos(this.angle) * currentMoveSpeed * magnitude;
@@ -187,7 +190,6 @@ function resizeCanvas() {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
     
-    // Auto-detect environments to show mobile touch pads on small or touch interfaces
     if (('ontouchstart' in window) || navigator.maxTouchPoints > 0 || window.innerWidth <= 768) {
         isTouchActiveDevice = true;
         touchJoystickZone.style.display = 'block';
@@ -200,11 +202,9 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// --- KEYBOARD HARDWARE LISTENER ASSIGNMENTS ---
 window.addEventListener('keydown', (e) => { const key = e.key.toLowerCase(); if (key in keys) keys[key] = true; });
 window.addEventListener('keyup', (e) => { const key = e.key.toLowerCase(); if (key in keys) keys[key] = false; });
 
-// --- VIRTUAL SMARTPHONE JOYSTICK ENGINE ---
 let joystickId = null;
 let startJoystickPos = { x: 0, y: 0 };
 
@@ -223,7 +223,7 @@ window.addEventListener('touchmove', (e) => {
             let dx = touch.clientX - startJoystickPos.x;
             let dy = touch.clientY - startJoystickPos.y;
             let distance = Math.hypot(dx, dy);
-            const maxRadius = 50; // Max constraint range limit of outer bounding node
+            const maxRadius = 50; 
 
             if (distance > maxRadius) {
                 dx = (dx / distance) * maxRadius;
@@ -250,7 +250,6 @@ const endJoystickHandler = (e) => {
 window.addEventListener('touchend', endJoystickHandler);
 window.addEventListener('touchcancel', endJoystickHandler);
 
-// Mobile Sprint Touch Toggle Pad Systems
 mobileSprintBtn.addEventListener('touchstart', (e) => {
     e.preventDefault();
     if(isSprintSpunOut) return;
@@ -285,11 +284,12 @@ function spawnBot(count = 1) {
 
 function setupArena() {
     entities = []; stamina = 100; isSprintSpunOut = false; mobileSprintActive = false;
-    mobileSprintBtn.classList.remove('active');
+    if (mobileSprintBtn) mobileSprintBtn.classList.remove('active');
     let nick = nickInput.value.trim() || "Player";
     player = new CubeEntity(WORLD_WIDTH/2, WORLD_HEIGHT/2, 2, nick, false, false);
     for (let k in keys) keys[k] = false;
     playerScoreEl.innerText = player.value;
+    totalCoinsEl.innerText = totalCoins;
     spawnFood(FOOD_COUNT); spawnBot(BOT_COUNT);
 }
 
@@ -369,8 +369,71 @@ function startGame() {
     resizeCanvas(); setupArena(); isRunning = true; updateLeaderboard(); loop();
 }
 
-function gameOver(killerName) { isRunning = false; deathReasonEl.innerText = `Eaten by ${killerName} on ${selectedDifficulty.toUpperCase()}!`; gameOverScreen.classList.remove('hidden'); }
-function showMenu() { gameOverScreen.classList.add('hidden'); menuScreen.classList.remove('hidden'); }
+function gameOver(killerName) { 
+    isRunning = false; 
+    totalCoins += player.value;
+    deathReasonEl.innerText = `Eaten by ${killerName} on ${selectedDifficulty.toUpperCase()}!`; 
+    gameOverScreen.classList.remove('hidden'); 
+    totalCoinsEl.innerText = totalCoins;
+    shopCoinsEl.innerText = totalCoins;
+    
+    // Updates Game Over Screen Revive Button to display quantity
+    if (ownedRevives > 0) {
+        useReviveBtn.disabled = false;
+        useReviveBtn.innerText = `Use Saved Revive (${ownedRevives})`;
+    } else {
+        useReviveBtn.disabled = true;
+        useReviveBtn.innerText = "No Revives Available";
+    }
+}
 
-// Init runtime constraints setup configurations
+function showMenu() { 
+    gameOverScreen.classList.add('hidden'); 
+    menuScreen.classList.remove('hidden'); 
+    updateShopUI(); 
+}
+
+function updateShopUI() {
+    if (!totalCoinsEl || !shopCoinsEl) return;
+    
+    totalCoinsEl.innerText = totalCoins;
+    shopCoinsEl.innerText = totalCoins;
+    
+    // Updates the visual text tracker counter
+    if (reviveCountDisplay) {
+        reviveCountDisplay.innerText = ownedRevives;
+    }
+
+    // REMOVED: Cap checks. Now checking strictly if you have enough currency.
+    if (totalCoins < REVIVE_COST) {
+        buyReviveBtn.disabled = true;
+        buyReviveBtn.innerText = `Buy 🪙${REVIVE_COST}`;
+    } else {
+        buyReviveBtn.disabled = false;
+        buyReviveBtn.innerText = `Buy 🪙${REVIVE_COST}`;
+    }
+}
+
+function buyReviveToken() {
+    // REMOVED: ownedRevives < 1 restriction so you can stack them infinitely
+    if (totalCoins >= REVIVE_COST) {
+        totalCoins -= REVIVE_COST;
+        ownedRevives += 1;
+        updateShopUI();
+    }
+}
+
+function useRevive() {
+    if (ownedRevives > 0) {
+        ownedRevives -= 1;
+        player.x = WORLD_WIDTH / 2;
+        player.y = WORLD_HEIGHT / 2;
+        player.scaleAnimation = 1.5; 
+        gameOverScreen.classList.add('hidden');
+        isRunning = true;
+        loop();
+    }
+}
+
+updateShopUI();
 resizeCanvas();

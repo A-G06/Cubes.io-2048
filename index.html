@@ -11,7 +11,6 @@
     <div id="game-wrapper">
         
         <div id="canvas-container">
-            <!-- Mobile Virtual Controllers Systems -->
             <div id="mobile-touch-joystick-zone">
                 <div id="mobile-joystick-handle"></div>
             </div>
@@ -22,6 +21,15 @@
                     <div class="hud-label">Value</div>
                     <div id="player-score" class="hud-val">2</div>
                 </div>
+                
+                <div class="coin-hud-container">
+                    <div class="hud-label">Wallet</div>
+                    <div class="coin-display-wrapper">
+                        <span class="coin-sign">🪙</span>
+                        <span id="total-coins" class="coin-val">0</span>
+                    </div>
+                </div>
+
                 <div class="stamina-container">
                     <div class="hud-label" style="text-align: center;">Sprint</div>
                     <svg class="stamina-ring" width="32" height="32">
@@ -40,6 +48,29 @@
             <canvas id="arenaCanvas"></canvas>
 
             <div id="menu-screen" class="screen">
+                
+                <div class="shop-panel">
+                    <h2>SHOP</h2>
+                    <div class="shop-wallet">
+                        <span class="coin-sign">🪙</span>
+                        <span id="shop-coins-val">0</span>
+                    </div>
+                    <div class="shop-items">
+                        <div class="shop-item">
+                            <div class="item-details">
+                                <span class="item-name">Extra Revive</span>
+                                <span class="item-desc">Keep your size after dying</span>
+                            </div>
+                            <button id="buy-revive-btn" class="menu-btn shop-buy-btn" onclick="buyReviveToken()">
+                                Buy 🪙500
+                            </button>
+                        </div>
+                        <div class="inventory-status">
+                            Inventory: <span id="revive-count-display" style="color: #00f2fe; font-weight: bold;">0</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="panel">
                     <h1>CUBES.IO 2048</h1>
                     <p class="subtitle">Eat, Merge, Destroy the Lesser Cubes</p>
@@ -70,7 +101,12 @@
                 <div class="panel" style="border-color: #ef4444;">
                     <h1 style="background: linear-gradient(45deg, #f87171, #ef4444); -webkit-background-clip: text;">WASTED</h1>
                     <p class="subtitle" id="death-reason" style="color: #fca5a5; margin-top: 10px;"></p>
-                    <button class="play-btn menu-btn" onclick="showMenu()" style="background: linear-gradient(135deg, #64748b, #475569); box-shadow: none;">Back to Menu</button>
+                    
+                    <div class="action-group" style="margin-bottom: 15px;">
+                        <button id="use-revive-btn" class="menu-btn revive-btn" onclick="useRevive()">Use Saved Revive</button>
+                    </div>
+
+                    <button class="play-btn menu-btn" onclick="showMenu()" style="background: linear-gradient(135deg, #64748b, #475569); box-shadow: none; width: 100%;">Back to Menu</button>
                 </div>
             </div>
         </div>
