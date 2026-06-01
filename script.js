@@ -90,7 +90,7 @@ class CubeEntity {
         this.x = x; this.y = y; this.value = value; this.name = name; this.isBot = isBot; this.isFood = isFood;
         this.baseSize = 40; this.size = this.calculateSize();
         this.angle = Math.random() * Math.PI * 2;
-        this.speed = isFood ? 0 : 3.5;
+        this.speed = isFood ? 5 : 5;
         this.scaleAnimation = 1;
     }
     calculateSize() { return this.baseSize + Math.log2(this.value) * 4; }
